@@ -17,7 +17,7 @@
 
 <script id="vertexShader" type="vertex">
     attribute vec3 aVertexPosition;
-    attribute vec3 aFrontColor;
+    attribute vec2 aTextureCoord;
 
     uniform mat4 uMVMatrix;
     uniform mat4 uPMatrix;
@@ -27,7 +27,9 @@
 
     void main(void) {
         gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
-		fragcolor = vec4(aFrontColor.rgb, 1.0);;
+        vec4 fragmentColor;
+		fragmentColor = texture2D(uSampler, vec2(aTextureCoord.s, aTextureCoord.t));
+		fragcolor = vec4(fragmentColor.rgb, fragmentColor.a);
     }
 </script>
 
@@ -105,12 +107,35 @@
         shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
         gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
 
-        shaderProgram.vertexFrontColorAttribute = gl.getAttribLocation(shaderProgram, "aFrontColor");
-        gl.enableVertexAttribArray(shaderProgram.vertexFrontColorAttribute);
+        shaderProgram.textureCoordAttribute = gl.getAttribLocation(shaderProgram, "aTextureCoord");
+        gl.enableVertexAttribArray(shaderProgram.textureCoordAttribute);
 
         shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
         shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
         shaderProgram.samplerUniform = gl.getUniformLocation(shaderProgram, "uSampler");
+    }
+
+
+    function handleLoadedTexture(texture) {
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+        gl.generateMipmap(gl.TEXTURE_2D);
+
+        gl.bindTexture(gl.TEXTURE_2D, null);
+    }
+
+    var galvanizedTexture;
+
+    function initTextures() {
+        galvanizedTexture = gl.createTexture();
+        galvanizedTexture.image = new Image();
+        galvanizedTexture.image.onload = function () {
+            handleLoadedTexture(galvanizedTexture)
+        }
+        galvanizedTexture.image.src = "./textures/galvanizedTexture.jpg";
     }
 
 
@@ -130,8 +155,8 @@
 
     var teapotVertexPositionBuffer;
     var teapotVertexNormalBuffer;
-    var teapotVertexFrontColorBuffer;
-    var teapotVertexBackColorBuffer;
+    var teapotVertexTextureCoordBuffer;
+    var teapotVertexIndexBuffer;
 
     function handleLoadedTeapot(teapotData) {
         teapotVertexNormalBuffer = gl.createBuffer();
@@ -140,29 +165,29 @@
         teapotVertexNormalBuffer.itemSize = 3;
         teapotVertexNormalBuffer.numItems = teapotData.vertexNormals.length / 3;
 
-        teapotVertexFrontColorBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, teapotVertexFrontColorBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(teapotData.vertexFrontcolors), gl.STATIC_DRAW);
-        teapotVertexFrontColorBuffer.itemSize = 3;
-        teapotVertexFrontColorBuffer.numItems = teapotData.vertexFrontcolors.length / 3;
-
-        teapotVertexBackColorBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, teapotVertexBackColorBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(teapotData.vertexBackcolors), gl.STATIC_DRAW);
-        teapotVertexBackColorBuffer.itemSize = 3;
-        teapotVertexBackColorBuffer.numItems = teapotData.vertexBackcolors.length / 3;
+        teapotVertexTextureCoordBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, teapotVertexTextureCoordBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(teapotData.vertexTextureCoords), gl.STATIC_DRAW);
+        teapotVertexTextureCoordBuffer.itemSize = 2;
+        teapotVertexTextureCoordBuffer.numItems = teapotData.vertexTextureCoords.length / 2;
 
         teapotVertexPositionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, teapotVertexPositionBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(teapotData.vertexPositions), gl.STATIC_DRAW);
         teapotVertexPositionBuffer.itemSize = 3;
         teapotVertexPositionBuffer.numItems = teapotData.vertexPositions.length / 3;
+
+        teapotVertexIndexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, teapotVertexIndexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(teapotData.indices), gl.STATIC_DRAW);
+        teapotVertexIndexBuffer.itemSize = 1;
+        teapotVertexIndexBuffer.numItems = teapotData.indices.length;
     }
 
 
     function loadTeapot() {
         var request = new XMLHttpRequest();
-        request.open("GET", "Kangaroo.json");
+        request.open("GET", "./JSON_Format/Teapot.json");
         request.onreadystatechange = function () {
             if (request.readyState == 4) {
                 handleLoadedTeapot(JSON.parse(request.responseText));
@@ -179,7 +204,7 @@
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        if (teapotVertexPositionBuffer == null || teapotVertexNormalBuffer == null || teapotVertexFrontColorBuffer == null || teapotVertexBackColorBuffer == null) {
+        if (teapotVertexPositionBuffer == null || teapotVertexNormalBuffer == null || teapotVertexTextureCoordBuffer == null || teapotVertexIndexBuffer == null) {
             return;
         }
 
@@ -187,19 +212,22 @@
 
         mat4.identity(mvMatrix);
 
-        mat4.translate(mvMatrix, [0, 0, -5]);
+        mat4.translate(mvMatrix, [0, 0, -40]);
 
         mat4.rotate(mvMatrix, degToRad(teapotAngle), [0, 1, 0]);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, galvanizedTexture);
         
         gl.uniform1i(shaderProgram.samplerUniform, 0);
         gl.bindBuffer(gl.ARRAY_BUFFER, teapotVertexPositionBuffer);
         gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, teapotVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, teapotVertexFrontColorBuffer);
-        gl.vertexAttribPointer(shaderProgram.vertexFrontColorAttribute, teapotVertexFrontColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
+        gl.bindBuffer(gl.ARRAY_BUFFER, teapotVertexTextureCoordBuffer);
+        gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, teapotVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, teapotVertexIndexBuffer);
         setMatrixUniforms();
-        gl.drawArrays(gl.TRIANGLES, 0, teapotVertexPositionBuffer.numItems);
+        gl.drawElements(gl.TRIANGLES, teapotVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
     }
 
 
@@ -225,6 +253,7 @@
         var canvas = document.getElementById("ICG-canvas");
         initGL(canvas);
         initShaders();
+        initTextures();
         loadTeapot();
 
         gl.clearColor(0.0, 0.2, 0.2, 1.0);

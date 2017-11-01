@@ -1,0 +1,19 @@
+attribute vec3 aVertexPosition;
+attribute vec2 aTextureCoord;
+attribute vec3 aSurfaceCenter;
+
+uniform mat4 uMVMatrix;
+uniform mat4 uPMatrix;
+
+uniform sampler2D uSampler;
+
+varying vec4 vCenter;
+varying vec4 frag_color;
+varying vec4 vPosition;
+void main(void) {
+	vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
+    gl_Position = uPMatrix * vPosition;
+
+    vCenter = uMVMatrix * vec4(aSurfaceCenter, 1.0);
+    frag_color = texture2D(uSampler, aTextureCoord);
+}

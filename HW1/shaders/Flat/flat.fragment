@@ -1,0 +1,41 @@
+#extension GL_OES_standard_derivatives : enable
+
+precision mediump float;
+uniform vec4 light1_pos_int;
+uniform vec4 light1_color;
+uniform vec4 light2_pos_int;
+uniform vec4 light2_color;
+
+uniform vec3 material_properties_ambient_intensity;
+
+varying vec4 frag_color;
+varying vec4 vPosition;
+varying vec4 vCenter;
+void main(void) {
+    vec3 dx = dFdx(vPosition.xyz);
+    vec3 dy = dFdy(vPosition.xyz);
+    vec3 fNormal = normalize(cross(dx, dy));
+    vec3 eyeDirection = normalize(-vCenter.xyz);
+
+    vec3 displacement1 = light1_pos_int.xyz - vCenter.xyz;
+    vec3 lightDirection1 = normalize(displacement1);
+    vec3 reflectionDirection1 = reflect(-lightDirection1, fNormal);
+    float distance1 = length(displacement1);
+    float specular1 = pow(max(dot(reflectionDirection1, eyeDirection), 0.0), material_properties_ambient_intensity.z) * light1_pos_int.w;
+    float light_attenuation1 = 1.0 / pow(distance1, 2.0) * material_properties_ambient_intensity.y * light1_pos_int.w * max(dot(lightDirection1, fNormal), 0.0);
+
+    vec3 displacement2 = light2_pos_int.xyz - vCenter.xyz;
+    vec3 lightDirection2 = normalize(displacement2);
+    vec3 reflectionDirection2 = reflect(-lightDirection2, fNormal);
+    float distance2 = length(displacement2);
+    float specular2 = pow(max(dot(reflectionDirection2, eyeDirection), 0.0), material_properties_ambient_intensity.z) * light2_pos_int.w;
+    float light_attenuation2 = 1.0 / pow(distance2, 2.0) * material_properties_ambient_intensity.y * light2_pos_int.w * max(dot(lightDirection2, fNormal), 0.0);
+
+    vec3 surface_color = light_attenuation1 * light1_color.xyz * frag_color.xyz
+                       + specular1 * light1_color.xyz
+                       + light_attenuation2 * light2_color.xyz * frag_color.xyz
+                       + specular2 * light2_color.xyz
+                       + material_properties_ambient_intensity.x * frag_color.xyz;
+
+    gl_FragColor = vec4(surface_color, 1.0);
+}
