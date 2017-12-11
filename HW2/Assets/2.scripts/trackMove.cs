@@ -32,7 +32,6 @@ public class trackMove : MonoBehaviour {
 		Vector3 temp = barrel.transform.localEulerAngles;
 		temp.x = angle;
 		barrel.transform.localEulerAngles = temp;//上下旋轉砲管
-
-	
+        
 	}
 }
