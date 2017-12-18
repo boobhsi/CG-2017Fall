@@ -2,7 +2,7 @@
 using System.Collections;
 
 public class tankMove : MonoBehaviour {
-
+    
 	public float mSpeed = 1;
 	public float rSpeed = 1;
     public float maxSpeed;
@@ -11,12 +11,14 @@ public class tankMove : MonoBehaviour {
 
     private Rigidbody mRigidBody;
     public Transform tailTransform;
-    private Transform previousFrameTransform;
+    //private Transform previousFrameTransform;
+
+    private pathQueue pq = new pathQueue();
 
 	// Use this for initialization
 	void Start () {
         mRigidBody = this.GetComponent<Rigidbody>();
-        previousFrameTransform = tailTransform;
+        //previousFrameTransform = tailTransform;
 	}
 
 	// Update is called once per frame
@@ -30,11 +32,9 @@ public class tankMove : MonoBehaviour {
 
         if (first != null)
         {
-            first.Follow(previousFrameTransform);
+            first.Follow(pq.oneInoneOut(mRigidBody.velocity));
+            //first.Follow(previousFrameTransform);
         }
-
-        previousFrameTransform = tailTransform;
-        //mRigidBody.angularVelocity = new Vector3(0, rSpeed * h, 0);
     }
 
     private void FixedUpdate()
@@ -47,5 +47,15 @@ public class tankMove : MonoBehaviour {
 
     public void register(girlController gc) {
         first = gc;
+        gc.gameObject.transform.position = tailTransform.position;
+    }
+
+    public void cutOne() {
+        if (first != null)
+        {
+            GameObject temp = first.gameObject;
+            temp.SetActive(false);
+            first = first.tail;
+        }
     }
 }

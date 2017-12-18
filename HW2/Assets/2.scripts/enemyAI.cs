@@ -13,7 +13,6 @@ public class enemyAI : MonoBehaviour {
     int counter = 0;
     // Use this for initialization
     void Start () {
-        nav = GetComponent<UnityEngine.AI.NavMeshAgent>();
         player = GameObject.FindGameObjectWithTag("Player");
     }
 	

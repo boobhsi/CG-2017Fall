@@ -19,7 +19,7 @@ public class fire : MonoBehaviour {
         {
             //產生砲彈在發射點
             Rigidbody shoot =
-                (Rigidbody)Instantiate(projcetile, transform.position, transform.rotation);
+                (Rigidbody)Instantiate(projcetile, transform.position, transform.rotation * Quaternion.Euler(0, 90, 90));
             //給砲彈方向力，將他從y軸推出去
             shoot.velocity = transform.TransformDirection(new Vector3(0, speed, 0));
             //讓坦克的碰撞框忽略砲彈的碰撞框

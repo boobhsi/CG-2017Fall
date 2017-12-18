@@ -7,10 +7,30 @@ public class chaoController : MonoBehaviour {
     public GameObject followed = null;
     public float speed = 2.0f;
     private Rigidbody mRigidBody;
+    private BoxCollider selfCollider;
+    
+    public GameObject mDetector;
+    public GameObject mContactor;
 
-	// Use this for initialization
-	void Start () {
+    private GameManager manager;
+
+    // Use this for initialization
+    void Start () {
+
+    }
+
+    void OnEnable()
+    {
+        speed = 2.0f;
+        followed = null;
+        mDetector.SetActive(true);
+        mContactor.SetActive(true);
+    }
+
+    void Awake() {
         mRigidBody = this.GetComponent<Rigidbody>();
+        selfCollider = this.GetComponent<BoxCollider>();
+        manager = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameManager>();
     }
 	
 	// Update is called once per frame
@@ -27,10 +47,30 @@ public class chaoController : MonoBehaviour {
         }
     }
 
-    private void OnTriggerEnter(Collider other)
+    public void registerFollow(GameObject fol) {
+        followed = fol;
+    }
+
+    public void disableChao() {
+        mContactor.SetActive(false);
+        mDetector.SetActive(false);
+        this.gameObject.SetActive(false);
+    }
+
+    private void OnDisable()
     {
-        if (other.gameObject.CompareTag("grils")) {
-            followed = other.gameObject;
-        }
+        selfCollider.enabled = false;
+    }
+
+    public void HitByBullet()
+    {
+        manager.sanDown();
+        this.gameObject.SetActive(false);
+    }
+
+    public void HitByBullet2()
+    {
+        //manager.sanDown();
+        this.gameObject.SetActive(false);
     }
 }

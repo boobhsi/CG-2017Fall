@@ -1,12 +1,12 @@
 ﻿
 public var cam1: Camera;
 public var cam3: Camera;
-public var camG: Camera;
+//public var camG: Camera;
 
 function Start () {
-    cam1.enabled = false;
+    cam1.enabled = true;
     cam3.enabled = false;
-    camG.enabled = true;
+    //camG.enabled = true;
 }
 
 function Update () {

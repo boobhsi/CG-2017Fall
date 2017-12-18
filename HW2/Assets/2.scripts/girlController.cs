@@ -10,20 +10,29 @@ public class girlController : MonoBehaviour {
 
     private GirlState state = GirlState.Idle;
     private Animator aniController = null;
-    private Transform previousFrameTransform = null;
+    //private Transform previousFrameTransform = null;
+    private Rigidbody mRigidbody;
 
     public girlController tail = null;
-    static private float safeDistance = 5.0f;
-    
+    //static private float safeDistance = 5.0f;
+    private pathQueue pq = new pathQueue();
 
-	// Use this for initialization
-	void Start () {
+    private GameManager manager;
+
+    // Use this for initialization
+    void Start() {
         state = GirlState.Idle;
         //aniController.SetInteger("State", (int)GirlState.Idle);
-	}
-	
-	// Update is called once per frame
-	void Update () {
+    }
+
+    private void Awake()
+    {
+        mRigidbody = this.GetComponent<Rigidbody>();
+        manager = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameManager>();
+    }
+
+    // Update is called once per frame
+    void Update() {
         switch (state) {
             case GirlState.Idle:
                 break;
@@ -38,45 +47,54 @@ public class girlController : MonoBehaviour {
             default:
                 break;
         }
-	}
+    }
 
-    public void Follow(Transform previousTransform) {
+    public void Follow(Vector3 previousVelocity) {
+        Debug.Log(previousVelocity);
 
-        Vector3 followDirection = previousTransform.forward;
+        mRigidbody.velocity = previousVelocity;
 
-        this.transform.position = previousTransform.position + followDirection * safeDistance;
-        this.transform.rotation = previousTransform.rotation;
+        //Vector3 followDirection = previousTransform.forward;
+
+        //this.transform.position = previousTransform.position + followDirection * safeDistance;
+        //this.transform.rotation = previousTransform.rotation;
 
         if (tail != null) {
-            tail.Follow(previousFrameTransform);
+            tail.Follow(pq.oneInoneOut(previousVelocity));
+            //tail.Follow(previousFrameTransform);
         }
 
-        previousFrameTransform = this.transform;
+        //previousFrameTransform = this.transform;
     }
 
-    private void OnTriggerEnter(Collider collision)
+    public void HitByBullet()
     {
-        Debug.Log(collision.gameObject.tag);
-        if (collision.gameObject.CompareTag("bullet")) {
-            switch (state) {
-                case GirlState.Idle:
-                    changeState(GirlState.Follow);
-                    break;
-                case GirlState.Follow:
-                    break;
-                case GirlState.Reset:
-                    break;
-                case GirlState.Talk:
-                    changeState(GirlState.Follow);
-                    break;
-                case GirlState.Walk:
-                    changeState(GirlState.Follow);
-                    break;
-                default:
-                    break;
-            }
+        switch (state) {
+            case GirlState.Idle:
+                changeState(GirlState.Follow);
+                break;
+            case GirlState.Follow:
+                break;
+            case GirlState.Reset:
+                break;
+            case GirlState.Talk:
+                changeState(GirlState.Follow);
+                break;
+            case GirlState.Walk:
+                changeState(GirlState.Follow);
+                break;
+            default:
+                break;
         }
     }
+
+    public void HitByBullet2()
+    {
+        manager.sanDown();
+        this.gameObject.SetActive(false);
+    }
+
+
 
     private void changeState(GirlState toThatState) {
         state = toThatState;
@@ -86,7 +104,6 @@ public class girlController : MonoBehaviour {
             case GirlState.Idle:
                 break;
             case GirlState.Follow:
-                GameManager manager = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameManager>();
                 manager.registerTail(this);
                 break;
             case GirlState.Reset:
@@ -102,5 +119,6 @@ public class girlController : MonoBehaviour {
 
     public void concatenate(girlController con) {
         tail = con;
+        tail.transform.position = this.transform.position;
     }
 }
