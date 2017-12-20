@@ -7,6 +7,9 @@ public class UiManager : MonoBehaviour {
 
     public Image SanImage;
     public Image LoveImage;
+    public Image BloodImage;
+
+    private float alpha = 0.5f;
 
 	// Use this for initialization
 	void Start () {
@@ -28,5 +31,25 @@ public class UiManager : MonoBehaviour {
         Vector3 mT = LoveImage.rectTransform.localScale;
         LoveImage.rectTransform.localScale = new Vector3(mT.x, l, mT.z);
         Debug.Log("Now Love: " + l);
+    }
+
+    public void BeHit()
+    {
+        StartCoroutine("fadeOutEffect");
+    }
+
+    private IEnumerator fadeOutEffect() {
+        //Debug.Log("start fade out");
+        BloodImage.enabled = true;
+        //Debug.Log("start fade out");
+        for (float i = 0.5f; i > 0.0f; i -= Time.deltaTime / 2.0f)
+        {
+            //Debug.Log(i);
+            BloodImage.color = new Color(1, 0, 0, i);
+            yield return null;
+        }
+        //Debug.Log("start fade out");
+        BloodImage.color = new Color(1, 0, 0, 0);
+        BloodImage.enabled = false;
     }
 }

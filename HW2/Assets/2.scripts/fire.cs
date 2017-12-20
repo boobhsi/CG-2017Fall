@@ -4,7 +4,7 @@ using System.Collections;
 public class fire : MonoBehaviour {
 
 	public Rigidbody projcetile;
-	float speed = 30;
+	float speed = 100;
 
 	// Use this for initialization
 	void Start () {

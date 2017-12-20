@@ -58,6 +58,7 @@ public class GameManager : MonoBehaviour {
     private void downSan() {
         san -= sanDownValue;
         ui.SendMessage("SetSan", san, SendMessageOptions.DontRequireReceiver);
+        ui.SendMessage("BeHit", SendMessageOptions.DontRequireReceiver);
     }
 
     public bool consumeLove() {
