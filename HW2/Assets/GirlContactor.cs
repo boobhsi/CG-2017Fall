@@ -39,7 +39,8 @@ public class GirlContactor : MonoBehaviour {
 
     private void OnTriggerEnter(Collider other)
     {
-        gm.beenCatch();
+        if (other.gameObject.GetComponent<girlController>().beConnected) gm.beenCatch();
+        else other.gameObject.SetActive(false);
         parentScript.disableChao();
         //gm.gameObject.SendMessage("beenCatch", SendMessageOptions.DontRequireReceiver);
     }

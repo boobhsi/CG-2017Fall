@@ -14,6 +14,7 @@ public class girlController : MonoBehaviour {
     private Rigidbody mRigidbody;
 
     public girlController tail = null;
+    public bool beConnected = false;
     //static private float safeDistance = 5.0f;
     private pathQueue pq = new pathQueue();
 
@@ -105,6 +106,7 @@ public class girlController : MonoBehaviour {
                 break;
             case GirlState.Follow:
                 manager.registerTail(this);
+                beConnected = true;
                 break;
             case GirlState.Reset:
                 break;
