@@ -16,7 +16,9 @@ public class explosion : MonoBehaviour {
         {
             other.gameObject.SendMessage("HitByBullet", SendMessageOptions.DontRequireReceiver);
             Instantiate(effect, transform.position, transform.rotation);
-            Destroy(gameObject);//刪除砲彈
+            //Destroy(gameObject);//刪除砲彈
         }
+
+        Destroy(gameObject);//刪除砲彈
     }
 }

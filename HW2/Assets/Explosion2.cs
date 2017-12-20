@@ -22,7 +22,9 @@ public class Explosion2 : MonoBehaviour {
         {
             other.gameObject.SendMessage("HitByBullet2", SendMessageOptions.DontRequireReceiver);
             Instantiate(effect, transform.position, transform.rotation);
-            Destroy(gameObject);//刪除砲彈
+            //Destroy(gameObject);//刪除砲彈
         }
+
+        Destroy(gameObject);//刪除砲彈
     }
 }
